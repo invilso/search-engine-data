@@ -8,7 +8,7 @@ from .tasks import adding_task
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TestView(ListView):
-    def post(self, request):
+    def get(self, request):
         task = adding_task.delay(5,5)
         return JsonResponse({'status': f'success task runned id: {task.id}'})
 # Create your views here.
