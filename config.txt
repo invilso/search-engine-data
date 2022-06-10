@@ -1,4 +1,4 @@
-export SECRET_KEY="django-insecure-h3pauvq-ae_z(@376_25=f+exh_(-0@yq6gwjxeo5_5d^@=o+$"
+export SECRET_KEY="key"
 export DB_ENGINE="dsadsasdsa"
 export DB_NAME=""
 export DB_USER=""
