@@ -147,8 +147,14 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-MEDIA_ROOT = 'uploads/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 LOGIN_REDIRECT_URL = '/'
+
+if not os.path.exists(MEDIA_ROOT):  
+    os.makedirs(MEDIA_ROOT)
+    
+if not os.path.exists(STATIC_ROOT):  
+    os.makedirs(STATIC_ROOT)
 
 
 CELERY_BROKER_URL = 'redis://localhost:6379'  
