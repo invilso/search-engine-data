@@ -152,9 +152,6 @@ LOGIN_REDIRECT_URL = '/'
 
 if not os.path.exists(MEDIA_ROOT):  
     os.makedirs(MEDIA_ROOT)
-    
-if not os.path.exists(STATIC_ROOT):  
-    os.makedirs(STATIC_ROOT)
 
 
 CELERY_BROKER_URL = 'redis://localhost:6379'  
