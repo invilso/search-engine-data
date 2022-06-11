@@ -1,4 +1,4 @@
-import google_search
+from .google_search import search
 
 def main():
-    print(google_search.search('Automotive workshops', num_results=100))
+    print(search('Automotive workshops', num_results=100))
