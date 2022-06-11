@@ -8,6 +8,6 @@ def main():
     # data = []
     # for v in search('Automotive workshops', num_results=100):
     #     data.append(v)
-    r = session.get(url='gta-trinity.ru')
+    r = session.get(url='https://gta-trinity.ru/')
     r.html.render()
     return r.text
