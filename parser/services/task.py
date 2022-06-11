@@ -1,4 +1,7 @@
 from .google_search import search
 
 def main():
-    return search('Automotive workshops', num_results=100)
+    data = []
+    for v in search('Automotive workshops', num_results=100):
+        data.append(v)
+    return data
