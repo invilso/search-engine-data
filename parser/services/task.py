@@ -10,4 +10,6 @@ def main():
     #     data.append(v)
     r = session.get(url='https://invilso.pp.ua/')
     r.html.render()
+    with open('file.html', encoding='utf-8', mode='w+') as f:
+        f.write(r.text)
     return r.text
