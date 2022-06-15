@@ -1,15 +1,390 @@
-from requests import request, session
-from .google_search import search
+from dataclasses import dataclass
+import asyncio
+import json
+import random
+import time
+from typing import Optional
 import requests_html
+import httpx
+import urllib.parse
+import bs4
+import re
+import xlsxwriter
+from requests.exceptions import ConnectionError
+from django.db.utils import IntegrityError
+from .excel import write_to_excel
 
-session = requests_html.HTMLSession()
+from ..models import Site as SiteModel
 
-def main():
-    # data = []
-    # for v in search('Automotive workshops', num_results=100):
-    #     data.append(v)
-    r = session.get(url='https://www.google.ru/maps/search/car+service/@38.1279033,-96.7198766,4z/data=!3m1!4b1')
-    r.html.render()
-    with open('file.html', encoding='utf-8', mode='w+') as f:
-        f.write(r.text)
-    return r.text
+async def a_req_get(session, url):
+    try:
+        return await session.get(url)
+    except ConnectionError:
+        print('Error Connection')
+        asyncio.sleep(5)
+        return await a_req_get(session, url)
+    
+def req_get(session, url):
+    try:
+        return session.get(url)
+    except ConnectionError:
+        print('Error Connection')
+        time.sleep(5)
+        return req_get(session, url)
+
+def compare_url(url):
+    base = 'https://www.google.com/'
+    return urllib.parse.urljoin(base, url) 
+
+@dataclass
+class GoogleLink:
+    '''Link to google search'''
+    link: str
+    
+@dataclass    
+class SomeLink:
+    '''Some link'''
+    link: str
+    session: requests_html.AsyncHTMLSession
+    
+    def __init__(self, link: str, session) -> None:
+        self.link = link
+        self.session = session
+        
+    async def get_website_data(self):
+        url = self.link
+        '''
+        Returns the website URL and email address found in HTML
+        code got from the URL.
+
+        Parameters:
+                url (string): URL to send the request to
+        '''
+        try:
+            if url is not None:
+                response = await a_req_get(session=self.session, url=url)
+
+                # Get the url
+                url_retrieved = response.url
+                content = response.content.decode("utf-8")
+                soup = bs4.BeautifulSoup(content, 'html.parser')
+                
+                # Get emails recursively
+                emails = []
+                if url_retrieved is not None:
+                    q = ["contact","about"]
+                    emails = await self.find_emails(content, soup, 0, q, [])
+                    emails = list(dict.fromkeys(emails))
+
+                return url_retrieved, emails
+            else:
+                return None, None
+        except Exception as ex:
+            return None, None
+
+    async def find_emails(self, content, base_soup, i, queries=[], found=[]):
+        if i < len(queries) and content is not None:
+            # Get the emails with regex
+            soup = bs4.BeautifulSoup(content, 'html.parser')
+            body = soup.find('body')
+            html_text_only = body.get_text()
+            match = re.findall(r"""[\w\.-]+@[\w\.-]+\.\w+""", html_text_only)
+
+            # Removes duplicate values
+            if match is not None:
+                found = found + match
+
+            # Advance to next page
+            links = base_soup.find_all('a')
+            next_page_url = None
+            for link in links:
+                curr_url = link.get("href")
+                if curr_url is not None and queries[i] in curr_url:
+                    next_page_url = curr_url
+                    break
+
+            cont = None
+            if next_page_url is not None:
+                try:
+                    response = await a_req_get(session=self.session, url=next_page_url)
+                    cont = response.content.decode("utf-8")
+                except:
+                    cont = None
+
+            return await self.find_emails(cont, base_soup, i + 1, queries, found)
+        else:
+            return found
+        
+    
+@dataclass   
+class QueryString:
+    '''Query to search in google maps'''
+    query: str
+    
+@dataclass
+class PhoneNumber():
+    '''USA phone number object'''
+    number: str
+    
+
+class Card():
+    soup: bs4.BeautifulSoup
+        
+    name: str|None
+    phone: PhoneNumber|None
+    website: SomeLink|None
+    email: str|None
+    address: str|None
+    thematic: str|None
+    
+    def __init__(self, soup: bs4.BeautifulSoup, client) -> None:
+        self.soup = soup
+        self.client = client
+        
+    def get_phone(self) -> str | None:
+        '''Працює більше 5 років · Irvine, CA, Сполучені Штати · +1 949-885-0063'''
+        phone_regex = re.compile(r'(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})')
+        details = self.soup.find('div', {'class': 'rllt__details'})
+        phone_object = details.find(name='div', text=phone_regex)
+        if phone_object:
+            return phone_regex.findall(phone_object.text)[0]
+        else:
+            return None
+        
+    def get_address(self) -> str | None:
+        address_regex = re.compile('\d{1,4} [\w\s]{1,20}(?:street|st|avenue|ave|road|rd|highway|hwy|square|sq|trail|trl|drive|dr|court|ct|parkway|pkwy|circle|cir|boulevard|blvd)\W?(?=\s|$)', re.IGNORECASE)
+        details = self.soup.find('div', {'class': 'rllt__details'})
+        address_object = details.find(name='div', text=address_regex)
+        if address_object:
+            return address_regex.findall(address_object.text)[0]
+        else:
+            return None
+        
+    def get_thematic(self) -> str|None:
+        div = self.soup.find("div", {'role': "heading"})
+        try:
+            div = div.find_next('div')
+            return re.split(' · ', div.text)[1]
+        except:
+            None
+        
+    async def get_email(self) -> str | None:
+        link = SomeLink(self.website, self.client)
+        _, email = await link.get_website_data()
+        if email is not None and len(email) > 0:
+            self.email = email[0]
+            return self.email
+        self.email = None
+        return None
+        
+    def get_name(self) -> str:
+        span = self.soup.find("span", {'class': "OSrXXb"})
+        return span.text
+        
+    def get_website(self) -> SomeLink:
+        div = self.soup.find("a", {"class": "yYlJEf Q7PwXb L48Cpd"})
+        try:
+            return compare_url(div['href'])
+        except TypeError:
+            return None
+    
+    async def colect_data(self) -> bool:
+        self.name = self.get_name()
+        self.phone = self.get_phone()
+        self.address = self.get_address()
+        self.thematic = self.get_thematic()
+        self.website = self.get_website()
+        if self.website:
+            self.email = await self.get_email()
+        else:
+            self.email = None
+        return True
+        
+
+class Page(): 
+    _link: str
+    _html: str
+    
+    def __init__(self, query: str | Optional[QueryString] = None, link: str | Optional[GoogleLink] = None) -> None:
+        if link:
+            self._link = link
+        else:
+            self._link = f"https://www.google.com/search?q={query}&rlz=1C1CHBF_enIN844IN844&sz=0&biw=514&bih=568&tbm=lcl&sxsrf=ALiCzsYIWdpsB8Stvu5edhP1x4R3jaDj8w%3A1655220274131&ei=MqioYtm6B7aV9u8PjLOAyA8&oq=car+service+arizona&gs_l=psy-ab.3..0i30i22k1l8j0i30i15i22k1j0i30i22k1.108711.119637.0.120465.27.20.2.4.4.0.2537.4752.0j1j1j5j9-1.9.0....0...1c.1.64.psy-ab..12.15.5093.10..35i362i39k1j0i512i10i1i42k1j0i512i10i1k1j0i512k1j0i512i10k1j35i39k1j0i67k1j0i203k1j0i457i203k1j0i30i13k1j0i30i15i13k1.300.zG-7PvRQRF8#rlfi=hd:;si:;mv:[[35.3753841,-110.857478],[31.935851200000002,-112.35450589999999]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3!2m4!1e17!4m2!17m1!1e2,lf:1"
+    
+    def get_html(self) -> int:
+        session = requests_html.HTMLSession()
+        r = req_get(session=session,url=self._link)
+        if r.status_code > 190 and r.status_code < 300:
+            self._html = r.text
+            with open('file.html', 'w+', encoding='utf-8') as f:
+                f.write(self._html)
+        return r.status_code
+    
+    def get_cards(self) -> list[bs4.BeautifulSoup]:
+        soup = bs4.BeautifulSoup(self._html, 'html.parser')
+        return soup.find_all("div", {"jsname": "GZq3Ke"})
+    
+    def get_next_page(self) -> GoogleLink:
+        soup = bs4.BeautifulSoup(self._html, 'html.parser')
+        b = soup.find("a", {"id": "pnnext"})
+        if b is not None:
+            return compare_url(b['href']) 
+        else:
+            return None
+        
+
+# p = Page()
+
+async def get_cards_info(cards):
+    page = []
+    async with httpx.AsyncClient() as client:
+        for card in cards:
+            c = Card(card, client=client)
+            if await c.colect_data():
+                page.append(
+                    {
+                        'name': c.name, 
+                        'phone': c.phone, 
+                        'website': c.website, 
+                        'email': c.email, 
+                        'address': c.address, 
+                        'thematic': c.thematic
+                    }
+                )
+    return page
+
+def get_page_info(p: Page):
+    p.get_html()
+    page = []
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    page = loop.run_until_complete(get_cards_info(p.get_cards()))
+    return page
+
+def go_to_next_page(link, database):
+    p = Page(link=link)
+    database.append(get_page_info(p))
+    return p.get_next_page()
+    
+def unpack_lists(array) -> list:
+    """
+    Recursive algorithm
+    Looks like recursive_flatten_iterator, but with extend/append
+
+    """
+    lst = []
+    for i in array:
+        if isinstance(i, list):
+            lst.extend(unpack_lists(i))
+        else:
+            lst.append(i)
+    return lst  
+    
+def parse_query(query: str):
+    database = []
+    p = Page(query=query)
+    p.get_html()
+    database.append(get_page_info(p))
+    link = p.get_next_page()
+    while link:
+        link = go_to_next_page(link, database)
+        time.sleep(random.randint(2, 4))
+    return database
+    
+def clean_database(arr: list) -> list[dict]:
+    arr = unpack_lists(arr)
+    emails = []
+    filtered = []
+    for card in arr:
+        if card['email']:
+            if card['email'] not in emails:
+                filtered.append(card)
+                emails.append(card['email'])
+    return filtered
+                
+def add_data_to_dicts_in_list(db: list, name: str, data):
+    arr = unpack_lists(db)
+    for el in arr:
+        el[name] = data
+    return arr
+    
+def write_to_json(database: list) -> bool:
+    with open('database.json', 'w+', encoding='utf-8') as f:
+        f.write(json.dumps(database))
+    return True
+
+def write_to_psql(database: list) -> bool:
+    for card in database:
+        try:
+            s = SiteModel(
+                organisation=card['name'],
+                thematic=card['thematic'],
+                email=card['email'],
+                phone=card['phone'],
+                website=card['website'],
+                state=card['state'],
+                city=card['city'],
+                address=card['address']
+            )
+            s.save()
+        except IntegrityError:
+            pass
+    return True
+
+def get_database_from_json():
+    with open('database.json', 'r', encoding='utf-8') as f:
+        return json.loads(f.read())
+ 
+def get_cityes_and_states() -> dict:
+    with open('cityes.json', 'r', encoding='utf-8') as f:
+        return json.loads(f.read())
+
+def main(queryes: list[str] = ['car service'], mode: int = 0):
+    """ Main task function, create parser
+    Args:
+        queryes (list[str], optional): queryes list to google maps. Defaults to ['car service'].
+        mode (int, optional): 1 - all big cityes(very slow), 2 - all states(slow), 0 - only query(fast). Defaults to 0.
+
+    Returns:
+        int: count finded businesses
+    """    
+    states_and_cityes = get_cityes_and_states()
+    
+        
+    database = []
+    
+    for query in queryes:
+        mine_data = []
+        if mode == 0:
+            query_data = parse_query(query)
+            query_data = add_data_to_dicts_in_list(query_data, 'city', '')
+            query_data = add_data_to_dicts_in_list(query_data, 'state', '')
+            mine_data.append(query_data)
+            time.sleep(6)
+        elif mode == 1:
+            for state in states_and_cityes:
+                for city in states_and_cityes[state]:
+                    query_data = parse_query(f"{query} near {city}")
+                    query_data = add_data_to_dicts_in_list(query_data, 'city', city)
+                    query_data = add_data_to_dicts_in_list(query_data, 'state', state)
+                    mine_data.append(query_data)
+                    time.sleep(6)
+        elif mode == 2:
+            for state in states_and_cityes:
+                query_data = parse_query(f"{query} near {state}")
+                query_data = add_data_to_dicts_in_list(query_data, 'city', '')
+                query_data = add_data_to_dicts_in_list(query_data, 'state', state)
+                mine_data.append(query_data)
+                time.sleep(6)
+        else:
+            return 0
+        mine_data = clean_database(mine_data)
+        database.append(unpack_lists(mine_data))
+    
+    database = clean_database(database)
+    i = write_to_excel(database=database) 
+    write_to_json(database=database)
+    write_to_psql(database=database)
+    
+    return i
+

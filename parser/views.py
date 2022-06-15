@@ -5,10 +5,15 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .tasks import adding_task
+from django.http import HttpResponse
+from .services.view_process import get_html
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TestView(ListView):
     def get(self, request):
         task = adding_task.delay()
         return JsonResponse({'status': f'success task runned id: {task.id}'})
-# Create your views here.
+    
+class ProcessView(ListView):
+    def get(self, request):
+        return HttpResponse(get_html())

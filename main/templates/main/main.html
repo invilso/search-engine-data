@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Main Page</title>
+        <meta name="description" content="Our first page">
+        <meta name="keywords" content="html tutorial template">
+    </head>
+    <body>
+        Content goes here.
+        <script>
+            function request(url, dict) {
+                var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
+                xmlhttp.open("POST", url);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.send(JSON.stringify(dict));
+            }
+        </script>
+    </body>
+</html>

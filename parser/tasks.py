@@ -3,4 +3,4 @@ from .services.task import main
 
 @shared_task
 def adding_task():  
-    return main()
+    return main(mode=1)

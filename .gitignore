@@ -156,3 +156,8 @@ used-links.txt
 config.sh
 uploads/
 file.html
+database.xlsx
+database.json
+full_database.json
+full_database.xlsx
+file.json
