@@ -201,6 +201,8 @@ class Card():
         if self.website:
             if not await is_website_exist_in_db(self.website):
                 self.email = await self.get_email()
+            else:
+                self.email = None
         else:
             self.email = None
         return True
