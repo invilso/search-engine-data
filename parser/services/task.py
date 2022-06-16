@@ -329,7 +329,8 @@ def write_to_psql(database: list) -> bool:
                 website=card['website'],
                 state=card['state'],
                 city=card['city'],
-                address=card['address']
+                address=card['address'],
+                query=card['query']
             )
             s.save()
         except IntegrityError:
