@@ -99,7 +99,7 @@
                 }
                 let dict = {'queryes': queryes_list, 'mode': mode}
                 console.log(dict)
-                request('http://{{request.get_host}}/parser/start-parse/', dict)
+                request(window.location.protocol+'//'+window.location.host+'/parser/start-parse/', dict)
             }
         </script>
     </body>
