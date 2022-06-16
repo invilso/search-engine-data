@@ -10,6 +10,7 @@ class Site(models.Model):
     state = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     address = models.CharField(max_length=70, blank=True, null=True)
+    query = models.CharField(max_length=70, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     def __str__(self) -> str:
         return f"{self.id} - {self.email} - {self.organisation}"

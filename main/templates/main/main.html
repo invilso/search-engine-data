@@ -3,15 +3,103 @@
         <title>Main Page</title>
         <meta name="description" content="Our first page">
         <meta name="keywords" content="html tutorial template">
+        <style>
+            .button {
+                appearance: auto;
+                writing-mode: horizontal-tb !important;
+                font-style: ;
+                font-variant-ligatures: ;
+                font-variant-caps: ;
+                font-variant-numeric: ;
+                font-variant-east-asian: ;
+                font-weight: ;
+                font-stretch: ;
+                font-size: ;
+                font-family: ;
+                text-rendering: auto;
+                color: buttontext;
+                letter-spacing: normal;
+                word-spacing: normal;
+                line-height: normal;
+                text-transform: none;
+                text-indent: 0px;
+                text-shadow: none;
+                display: inline-block;
+                text-align: center;
+                align-items: flex-start;
+                cursor: default;
+                box-sizing: border-box;
+                background-color: buttonface;
+                margin: 0em;
+                padding: 1px 6px;
+                border-width: 2px;
+                border-style: outset;
+                border-color: buttonborder;
+                border-image: initial;
+            }
+            .button:hover {
+                background-color: #BBBBBB;
+            }
+        </style>
     </head>
     <body>
-        Content goes here.
+        <a target="_blank" rel="noopener noreferrer" href='/flower'>TASKS LIST</a> 
+        ||
+        <a target="_blank" rel="noopener noreferrer" href='/admin/parser/site/'>FULL DATABASE</a> 
+        ||
+        <a target="_blank" rel="noopener noreferrer" href="{% url 'parser:view_process' %}">VIEW PROGRESS</a>
+        <br>
+        <br>
+        
+        <b>MODES:</b>
+        <br>
+        <b>city</b> - parse all usa cityes ID=1
+        <br>
+        <b>state</b> - parse all usa states ID=2
+        <br>
+        <b>none</b> - parse only queryes ID=0
+        <br>
+        <br>
+        <br>
+        <textarea id="queryes" rows="5" cols="50">car service car repaire service</textarea>
+        Input queryes here
+        <br>
+        <input id="mode">Enter mode here.</input>      
+        <br>
+        <br>
+        <button onclick='start_parse()'>START PARSE</button>      
+        <br>
+        <br>
+        <br>
+        <a target="_blank" rel="noopener noreferrer" href="{% url 'main:download_excel' %}" class="button">Download XLSX</a>
+        <a target="_blank" rel="noopener noreferrer" href="{% url 'main:download_json' %}" class="button">Download JSON</a>
         <script>
-            function request(url, dict) {
-                var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
+            document.getElementById('queryes').value = 'car service\ncar repaire service';
+            document.getElementById('mode').value = 'none';
+           
+            function request(url, dict, handler) {
+                let xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
                 xmlhttp.open("POST", url);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.send(JSON.stringify(dict));
+                xmlhttp.onload = function() {
+                    alert(`Sended [CODE: ${xmlhttp.status}]: ${xmlhttp.response}`);
+                };
+                xmlhttp.onerror = function() { // происходит, только когда запрос совсем не получилось выполнить
+                    alert(`ERROR Connection`);
+                };
+            }
+
+            function start_parse(){
+                let queryes = document.getElementById('queryes').value; 
+                let mode = document.getElementById('mode').value; 
+                let queryes_list = []
+                for (variable of queryes.split('\n')) {
+                    queryes_list.push(variable.trim())
+                }
+                let dict = {'queryes': queryes_list, 'mode': mode}
+                console.log(dict)
+                request('http://{{request.get_host}}/parser/start-parse/', dict)
             }
         </script>
     </body>

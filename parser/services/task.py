@@ -9,7 +9,6 @@ import httpx
 import urllib.parse
 import bs4
 import re
-import xlsxwriter
 from requests.exceptions import ConnectionError
 from django.db.utils import IntegrityError
 from .excel import write_to_excel
@@ -195,7 +194,8 @@ class Card():
         self.thematic = self.get_thematic()
         self.website = self.get_website()
         if self.website:
-            self.email = await self.get_email()
+            if not SiteModel.objects.filter(website=self.website).exists():
+                self.email = await self.get_email()
         else:
             self.email = None
         return True
@@ -359,26 +359,35 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
             query_data = parse_query(query)
             query_data = add_data_to_dicts_in_list(query_data, 'city', '')
             query_data = add_data_to_dicts_in_list(query_data, 'state', '')
+            query_data = add_data_to_dicts_in_list(query_data, 'query', query)
             mine_data.append(query_data)
-            time.sleep(6)
+            write_to_psql(unpack_lists(query_data))
+            time.sleep(random.randint(5, 12))
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
-                    query_data = parse_query(f"{query} near {city}")
+                    q = f"{query} near {city}"
+                    query_data = parse_query(q)
                     query_data = add_data_to_dicts_in_list(query_data, 'city', city)
                     query_data = add_data_to_dicts_in_list(query_data, 'state', state)
+                    query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                     mine_data.append(query_data)
-                    time.sleep(6)
+                    write_to_psql(unpack_lists(query_data))
+                    time.sleep(random.randint(5, 12))
         elif mode == 2:
             for state in states_and_cityes:
-                query_data = parse_query(f"{query} near {state}")
+                q = f"{query} near {state}"
+                query_data = parse_query(q)
                 query_data = add_data_to_dicts_in_list(query_data, 'city', '')
                 query_data = add_data_to_dicts_in_list(query_data, 'state', state)
+                query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                 mine_data.append(query_data)
-                time.sleep(6)
+                write_to_psql(unpack_lists(query_data))
+                time.sleep(random.randint(5, 12))
         else:
             return 0
         mine_data = clean_database(mine_data)
+        
         database.append(unpack_lists(mine_data))
     
     database = clean_database(database)

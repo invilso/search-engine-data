@@ -16,7 +16,8 @@ class Excel():
             "address": "",
             "thematic": "",
             'city': '',
-            'state': ''
+            'state': '',
+            'query': ''
         }
         self.headers = self.generate_headers(data)
         self.print_table_headers()
