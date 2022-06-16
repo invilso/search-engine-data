@@ -12,8 +12,13 @@ import re
 from requests.exceptions import ConnectionError
 from django.db.utils import IntegrityError
 from .excel import write_to_excel
+from asgiref.sync import sync_to_async
 
 from ..models import Site as SiteModel
+
+@sync_to_async
+def is_website_exist_in_db(website: str):
+    return SiteModel.objects.filter(website=website).exists()
 
 async def a_req_get(session, url):
     try:
@@ -194,7 +199,7 @@ class Card():
         self.thematic = self.get_thematic()
         self.website = self.get_website()
         if self.website:
-            if not SiteModel.objects.filter(website=self.website).exists():
+            if not await is_website_exist_in_db(self.website):
                 self.email = await self.get_email()
         else:
             self.email = None
