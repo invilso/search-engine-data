@@ -217,7 +217,7 @@ class Page():
         if link:
             self._link = link
         else:
-            self._link = f"https://www.google.com/search?q={query}&rlz=1C1CHBF_enIN844IN844&sz=0&biw=514&bih=568&tbm=lcl&sxsrf=ALiCzsYIWdpsB8Stvu5edhP1x4R3jaDj8w%3A1655220274131&ei=MqioYtm6B7aV9u8PjLOAyA8&oq=car+service+arizona&gs_l=psy-ab.3..0i30i22k1l8j0i30i15i22k1j0i30i22k1.108711.119637.0.120465.27.20.2.4.4.0.2537.4752.0j1j1j5j9-1.9.0....0...1c.1.64.psy-ab..12.15.5093.10..35i362i39k1j0i512i10i1i42k1j0i512i10i1k1j0i512k1j0i512i10k1j35i39k1j0i67k1j0i203k1j0i457i203k1j0i30i13k1j0i30i15i13k1.300.zG-7PvRQRF8#rlfi=hd:;si:;mv:[[35.3753841,-110.857478],[31.935851200000002,-112.35450589999999]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3!2m4!1e17!4m2!17m1!1e2,lf:1"
+            self._link = f"https://www.google.com/search?q={query}&rlz=1C1CHBF_enIN844IN844&sz=0&biw=806&bih=625&tbm=lcl&sxsrf=ALiCzsYCtPk7mDG6FeMiNjGzciojQ1xCHA%3A1655541625585&ei=eY-tYqiqI5CprgSeqYqoBQ&oq={query}&gs_l=psy-ab.3...9838.13982.0.14172.19.16.0.0.0.0.269.1204.0j5j2.7.0....0...1c.1.64.psy-ab..12.7.1204...33i21k1j35i39k1j0i30i22k1j0i13k1j0i30i13k1j0i30i13i5k1j0i512k1j0i30i15i22k1j33i30i22i29k1j33i30i15i22i29k1.0.YSMq-bqFdnU"
     
     def get_html(self) -> int:
         session = requests_html.HTMLSession()
