@@ -221,6 +221,7 @@ class Page():
     
     def get_html(self) -> int:
         session = requests_html.HTMLSession()
+        session.proxies = {'http': 'socks5h://127.0.0.1:9050','https': 'socks5h://127.0.0.1:9050'}
         r = req_get(session=session,url=self._link)
         if r.status_code > 190 and r.status_code < 300:
             self._html = r.text
@@ -246,6 +247,7 @@ class Page():
 async def get_cards_info(cards):
     page = []
     async with httpx.AsyncClient() as client:
+        client.proxies = {'http': 'socks5h://127.0.0.1:9050','https': 'socks5h://127.0.0.1:9050'}
         for card in cards:
             c = Card(card, client=client)
             if await c.colect_data():
