@@ -32,7 +32,7 @@ async def a_req_get(session, url):
         return await a_req_get(session, url)
     
 def req_get(session, url):
-    session.headers = {'Cookie':'1P_JAR=2022-06-18-10; NID=511=sWQLpTMdHkYdCm7kPT6IpnzwNqjBzEOewHN_T0XL9gcIqZZ9Ll3zgUKVeAjjew2FClhSx_soP5NJPlN13908R4o02xVUbPEwsCtJ6EUpqGNqSq308iXtRzftQj-f7j24HksPz4E9Iq6aDIFd90b3_X06XDHXHztFg-8bqzfM4GY'}
+    # session.headers = {'Cookie':'1P_JAR=2022-06-18-10; NID=511=sWQLpTMdHkYdCm7kPT6IpnzwNqjBzEOewHN_T0XL9gcIqZZ9Ll3zgUKVeAjjew2FClhSx_soP5NJPlN13908R4o02xVUbPEwsCtJ6EUpqGNqSq308iXtRzftQj-f7j24HksPz4E9Iq6aDIFd90b3_X06XDHXHztFg-8bqzfM4GY'}
     try:
         return session.get(url)
     except ConnectionError:
@@ -304,8 +304,8 @@ def parse_query(query: str):
     database.append(get_page_info(p))
     link = p.get_next_page()
     while link:
+        time.sleep(random.randint(5, 10))
         link = go_to_next_page(link, database)
-        time.sleep(random.randint(2, 4))
     return database
     
 def clean_database(arr: list) -> list[dict]:
@@ -383,7 +383,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
             query_data = add_data_to_dicts_in_list(query_data, 'query', query)
             mine_data.append(query_data)
             write_to_psql(unpack_lists(query_data))
-            time.sleep(random.randint(5, 12))
+            time.sleep(random.randint(30, 80))
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
@@ -394,7 +394,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                     query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                     mine_data.append(query_data)
                     write_to_psql(unpack_lists(query_data))
-                    time.sleep(random.randint(5, 12))
+                    time.sleep(random.randint(30, 80))
         elif mode == 2:
             for state in states_and_cityes:
                 q = f"{query} near {state}"
@@ -404,7 +404,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                 query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                 mine_data.append(query_data)
                 write_to_psql(unpack_lists(query_data))
-                time.sleep(random.randint(5, 12))
+                time.sleep(random.randint(30, 80))
         else:
             return 0
         mine_data = clean_database(mine_data)
