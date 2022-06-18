@@ -13,6 +13,7 @@ from requests.exceptions import ConnectionError
 from django.db.utils import IntegrityError
 from .excel import write_to_excel
 from asgiref.sync import sync_to_async
+from django.db.utils import DataError
 
 from ..models import Site as SiteModel
 
@@ -336,6 +337,9 @@ def write_to_psql(database: list) -> bool:
             )
             s.save()
         except IntegrityError:
+            pass
+            
+        except DataError:
             pass
     return True
 
