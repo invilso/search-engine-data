@@ -224,7 +224,7 @@ class Page():
         if link:
             self._link = link
         else:
-            self._link = f"https://www.google.com/search?q={query}&rlz=1C1CHBF_enIN844IN844&sz=0&biw=806&bih=625&tbm=lcl&sxsrf=ALiCzsYCtPk7mDG6FeMiNjGzciojQ1xCHA%3A1655541625585&ei=eY-tYqiqI5CprgSeqYqoBQ&oq={query}&gs_l=psy-ab.3...9838.13982.0.14172.19.16.0.0.0.0.269.1204.0j5j2.7.0....0...1c.1.64.psy-ab..12.7.1204...33i21k1j35i39k1j0i30i22k1j0i13k1j0i30i13k1j0i30i13i5k1j0i512k1j0i30i15i22k1j33i30i22i29k1j33i30i15i22i29k1.0.YSMq-bqFdnU&tbs=lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3,lf:1&rlst=f"
+            self._link = f"https://www.google.com/search?sa=X&rlz=1C1CHBF_enIN844IN844&sz=0&biw=1036&bih=529&tbs=lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!2m1!1e2!2m1!1e3,lf:1&tbm=lcl&q={query}&rflfq=1&num=10&ved=2ahUKEwinh4ngttHwAhV_7XMBHTlIBVAQjGp6BAgiEGc&cshid=1621278964391616&rlst=f#rlfi=hd:;si:;mv:[[53.4004863,154.607647],[-13.0377864,16.6385598]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!1m4!1u2!2m2!2m1!1e1!1m4!1u1!2m2!1m1!1e1!1m4!1u1!2m2!1m1!1e2!2m1!1e2!2m1!1e1!2m1!1e3,lf:1"
     
     def get_html(self) -> int:
         session = requests_html.HTMLSession()
