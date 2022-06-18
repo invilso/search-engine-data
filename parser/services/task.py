@@ -14,6 +14,8 @@ from django.db.utils import IntegrityError
 from .excel import write_to_excel
 from asgiref.sync import sync_to_async
 from django.db.utils import DataError
+from fake_useragent import UserAgent
+
 
 from ..models import Site as SiteModel
 
@@ -30,6 +32,7 @@ async def a_req_get(session, url):
         return await a_req_get(session, url)
     
 def req_get(session, url):
+    session.headers = {'Cookie':'1P_JAR=2022-06-18-10; NID=511=sWQLpTMdHkYdCm7kPT6IpnzwNqjBzEOewHN_T0XL9gcIqZZ9Ll3zgUKVeAjjew2FClhSx_soP5NJPlN13908R4o02xVUbPEwsCtJ6EUpqGNqSq308iXtRzftQj-f7j24HksPz4E9Iq6aDIFd90b3_X06XDHXHztFg-8bqzfM4GY'}
     try:
         return session.get(url)
     except ConnectionError:
