@@ -266,7 +266,11 @@ def get_page_info(p: Page):
     page = []
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    page = loop.run_until_complete(get_cards_info(p.get_cards()))
+    try:
+        cards = p.get_cards()
+    except:
+        cards = []
+    page = loop.run_until_complete(get_cards_info(cards))
     return page
 
 def go_to_next_page(link, database):
