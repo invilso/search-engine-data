@@ -32,9 +32,10 @@ async def a_req_get(session, url):
         return await a_req_get(session, url)
     
 def req_get(session, url):
+    ua = UserAgent()
     session.headers = {
         'Cookie':'1P_JAR=2022-06-18-10; NID=511=sWQLpTMdHkYdCm7kPT6IpnzwNqjBzEOewHN_T0XL9gcIqZZ9Ll3zgUKVeAjjew2FClhSx_soP5NJPlN13908R4o02xVUbPEwsCtJ6EUpqGNqSq308iXtRzftQj-f7j24HksPz4E9Iq6aDIFd90b3_X06XDHXHztFg-8bqzfM4GY',
-        'User-Agent': 'PostmanRuntime/7.29.0'
+        'User-Agent': ua.random
     }
     try:
         return session.get(url)
