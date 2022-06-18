@@ -232,6 +232,8 @@ class Page():
             self._html = r.text
             with open('file.html', 'w+', encoding='utf-8') as f:
                 f.write(self._html)
+        else:
+            print(r.status_code, r.text)
         return r.status_code
     
     def get_cards(self) -> list[bs4.BeautifulSoup]:
