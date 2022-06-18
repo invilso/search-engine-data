@@ -308,7 +308,7 @@ def parse_query(query: str):
     database.append(get_page_info(p))
     link = p.get_next_page()
     while link:
-        time.sleep(random.randint(20, 55))
+        time.sleep(random.randint(25, 65))
         link = go_to_next_page(link, database)
     return database
     
@@ -387,7 +387,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
             query_data = add_data_to_dicts_in_list(query_data, 'query', query)
             mine_data.append(query_data)
             write_to_psql(unpack_lists(query_data))
-            time.sleep(random.randint(90, 200))
+            time.sleep(random.randint(100, 350))
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
@@ -398,7 +398,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                     query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                     mine_data.append(query_data)
                     write_to_psql(unpack_lists(query_data))
-                    time.sleep(random.randint(90, 200))
+                    time.sleep(random.randint(100, 350))
         elif mode == 2:
             for state in states_and_cityes:
                 q = f"{query} near {state}"
@@ -408,7 +408,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                 query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                 mine_data.append(query_data)
                 write_to_psql(unpack_lists(query_data))
-                time.sleep(random.randint(90, 200))
+                time.sleep(random.randint(100, 350))
         else:
             return 0
         mine_data = clean_database(mine_data)
