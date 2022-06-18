@@ -227,7 +227,6 @@ class Page():
     
     def get_html(self) -> int:
         session = requests_html.HTMLSession()
-        session.proxies = {'http': 'socks5h://127.0.0.1:9050','https': 'socks5h://127.0.0.1:9050'}
         r = req_get(session=session,url=self._link)
         if r.status_code > 190 and r.status_code < 300:
             self._html = r.text
@@ -253,7 +252,6 @@ class Page():
 async def get_cards_info(cards):
     page = []
     async with httpx.AsyncClient() as client:
-        client.proxies = {'http': 'socks5h://127.0.0.1:9050','https': 'socks5h://127.0.0.1:9050'}
         for card in cards:
             c = Card(card, client=client)
             if await c.colect_data():
@@ -307,7 +305,7 @@ def parse_query(query: str):
     database.append(get_page_info(p))
     link = p.get_next_page()
     while link:
-        time.sleep(random.randint(5, 10))
+        time.sleep(random.randint(10, 25))
         link = go_to_next_page(link, database)
     return database
     
@@ -386,7 +384,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
             query_data = add_data_to_dicts_in_list(query_data, 'query', query)
             mine_data.append(query_data)
             write_to_psql(unpack_lists(query_data))
-            time.sleep(random.randint(30, 80))
+            time.sleep(random.randint(30, 90))
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
@@ -397,7 +395,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                     query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                     mine_data.append(query_data)
                     write_to_psql(unpack_lists(query_data))
-                    time.sleep(random.randint(30, 80))
+                    time.sleep(random.randint(30, 90))
         elif mode == 2:
             for state in states_and_cityes:
                 q = f"{query} near {state}"
@@ -407,7 +405,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                 query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                 mine_data.append(query_data)
                 write_to_psql(unpack_lists(query_data))
-                time.sleep(random.randint(30, 80))
+                time.sleep(random.randint(30, 90))
         else:
             return 0
         mine_data = clean_database(mine_data)
