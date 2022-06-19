@@ -241,6 +241,7 @@ class Page():
                 f.write(self._html)
         else:
             self._error_requests += 0.5
+            print(f'Прилетел бан, ждём {(60*self._error_requests)*60} часов')
             time.sleep((60*self._error_requests)*60)
             return self.get_html()
         return r.status_code
