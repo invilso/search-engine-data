@@ -400,7 +400,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
-                    if not is_city_exist_in_db():
+                    if not is_city_exist_in_db(city):
                         q = f"{query} near {city}"
                         query_data = parse_query(q)
                         query_data = add_data_to_dicts_in_list(query_data, 'city', city)
@@ -409,6 +409,8 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                         mine_data.append(query_data)
                         write_to_psql(unpack_lists(query_data))                          
                         time.sleep(random.randint(60, 90))
+                    else:
+                        print(f'Drop {city}')
         elif mode == 2:
             for state in states_and_cityes:
                 q = f"{query} near {state}"
