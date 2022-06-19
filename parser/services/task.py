@@ -23,6 +23,10 @@ from ..models import Site as SiteModel
 def is_website_exist_in_db(website: str):
     return SiteModel.objects.filter(website=website).exists()
 
+def is_city_exist_in_db(city: str):
+    return SiteModel.objects.filter(city=city).exists()
+
+
 async def a_req_get(session, url):
     try:
         return await session.get(url)
@@ -219,6 +223,7 @@ class Card():
 class Page(): 
     _link: str
     _html: str
+    _error_requests: float = 0
     
     def __init__(self, query: str | Optional[QueryString] = None, link: str | Optional[GoogleLink] = None) -> None:
         if link:
@@ -230,11 +235,14 @@ class Page():
         session = requests_html.HTMLSession()
         r = req_get(session=session,url=self._link)
         if r.status_code > 190 and r.status_code < 300:
+            self._error_requests = 0
             self._html = r.text
             with open('file.html', 'w+', encoding='utf-8') as f:
                 f.write(self._html)
         else:
-            print(r.status_code, r.text)
+            self._error_requests += 0.5
+            time.sleep((60*self._error_requests)*60)
+            return self.get_html()
         return r.status_code
     
     def get_cards(self) -> list[bs4.BeautifulSoup]:
@@ -308,7 +316,7 @@ def parse_query(query: str):
     database.append(get_page_info(p))
     link = p.get_next_page()
     while link:
-        time.sleep(random.randint(25, 65))
+        time.sleep(random.randint(15, 35))
         link = go_to_next_page(link, database)
     return database
     
@@ -387,18 +395,19 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
             query_data = add_data_to_dicts_in_list(query_data, 'query', query)
             mine_data.append(query_data)
             write_to_psql(unpack_lists(query_data))
-            time.sleep(random.randint(100, 350))
+            time.sleep(random.randint(60, 90))
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
-                    q = f"{query} near {city}"
-                    query_data = parse_query(q)
-                    query_data = add_data_to_dicts_in_list(query_data, 'city', city)
-                    query_data = add_data_to_dicts_in_list(query_data, 'state', state)
-                    query_data = add_data_to_dicts_in_list(query_data, 'query', q)
-                    mine_data.append(query_data)
-                    write_to_psql(unpack_lists(query_data))
-                    time.sleep(random.randint(100, 350))
+                    if not is_city_exist_in_db():
+                        q = f"{query} near {city}"
+                        query_data = parse_query(q)
+                        query_data = add_data_to_dicts_in_list(query_data, 'city', city)
+                        query_data = add_data_to_dicts_in_list(query_data, 'state', state)
+                        query_data = add_data_to_dicts_in_list(query_data, 'query', q)
+                        mine_data.append(query_data)
+                        write_to_psql(unpack_lists(query_data))                          
+                        time.sleep(random.randint(60, 90))
         elif mode == 2:
             for state in states_and_cityes:
                 q = f"{query} near {state}"
@@ -408,7 +417,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
                 query_data = add_data_to_dicts_in_list(query_data, 'query', q)
                 mine_data.append(query_data)
                 write_to_psql(unpack_lists(query_data))
-                time.sleep(random.randint(100, 350))
+                time.sleep(random.randint(60, 90))
         else:
             return 0
         mine_data = clean_database(mine_data)
