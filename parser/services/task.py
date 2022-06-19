@@ -23,8 +23,8 @@ from ..models import Site as SiteModel
 def is_website_exist_in_db(website: str):
     return SiteModel.objects.filter(website=website).exists()
 
-def is_city_exist_in_db(city: str):
-    return SiteModel.objects.filter(city=city).exists()
+def is_city_exist_in_db(city: str, state: str):
+    return SiteModel.objects.filter(city=city, state=state).exists()
 
 
 async def a_req_get(session, url):
@@ -400,7 +400,7 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
-                    if not is_city_exist_in_db(city):
+                    if not is_city_exist_in_db(city, state):
                         q = f"{query} near {city}"
                         query_data = parse_query(q)
                         query_data = add_data_to_dicts_in_list(query_data, 'city', city)
