@@ -1,5 +1,6 @@
 from ..models import QueryesPool, Site as SiteModel
 from django.db.utils import DataError, IntegrityError
+from django.db import transaction
 
 def is_website_exist_in_db(website: str):
     return SiteModel.objects.filter(website=website).exists()
@@ -10,18 +11,19 @@ def is_city_exist_in_db(city: str, state: str):
 def write_to_site_db(database: list) -> bool:
     for card in database:
         try:
-            s = SiteModel(
-                organisation=card['name'],
-                thematic=card['thematic'],
-                email=card['email'],
-                phone=card['phone'],
-                website=card['website'],
-                state=card['state'],
-                city=card['city'],
-                address=card['address'],
-                query=card['query']
-            )
-            s.save()
+            with transaction.atomic():
+                s = SiteModel(
+                    organisation=card['name'],
+                    thematic=card['thematic'],
+                    email=card['email'],
+                    phone=card['phone'],
+                    website=card['website'],
+                    state=card['state'],
+                    city=card['city'],
+                    address=card['address'],
+                    query=card['query']
+                )
+                s.save()
         except IntegrityError:
             pass
             
@@ -31,13 +33,14 @@ def write_to_site_db(database: list) -> bool:
 
 def add_query(query: str, city: str | None, state: str | None) -> bool:
     try:
-        s = QueryesPool(
-            query=query,
-            city=city,
-            state=state
-        )
-        s.save()
-        return True
+        with transaction.atomic():
+            s = QueryesPool(
+                query=query,
+                city=city,
+                state=state
+            )
+            s.save()
+            return True
     except IntegrityError:
         pass
     except DataError:
