@@ -16,7 +16,7 @@ from requests.exceptions import ConnectionError
 
 @sync_to_async
 def is_website_exist_in_db(website: str):
-    return i_w_e_i_d()
+    return i_w_e_i_d(website)
 
 async def a_req_get(session, url):
     try:
@@ -197,7 +197,7 @@ class Card():
         self.thematic = self.get_thematic()
         self.website = self.get_website()
         if self.website:
-            if not await is_website_exist_in_db(self.website):
+            if not await is_website_exist_in_db(website=self.website):
                 self.email = await self.get_email()
             else:
                 self.email = None
