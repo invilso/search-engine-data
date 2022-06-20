@@ -1,31 +1,22 @@
-from dataclasses import dataclass
 import asyncio
-import json
 import random
-import time
-from typing import Optional
-import requests_html
-import httpx
-import urllib.parse
-import bs4
 import re
-from requests.exceptions import ConnectionError
-from django.db.utils import IntegrityError
-from .excel import write_to_excel
+import time
+import urllib.parse
+from dataclasses import dataclass
+from typing import Optional
+from .db import get_any_query, write_to_site_db, is_website_exist_in_db as i_w_e_i_d
+
+import bs4
+import httpx
+import requests_html
 from asgiref.sync import sync_to_async
-from django.db.utils import DataError
-from fake_useragent import UserAgent
+from requests.exceptions import ConnectionError
 
-
-from ..models import Site as SiteModel
 
 @sync_to_async
 def is_website_exist_in_db(website: str):
-    return SiteModel.objects.filter(website=website).exists()
-
-def is_city_exist_in_db(city: str, state: str):
-    return SiteModel.objects.filter(city=city, state=state).exists()
-
+    return i_w_e_i_d()
 
 async def a_req_get(session, url):
     try:
@@ -36,11 +27,6 @@ async def a_req_get(session, url):
         return await a_req_get(session, url)
     
 def req_get(session, url):
-    # ua = UserAgent()
-    # session.headers = {
-    #     'Cookie':'1P_JAR=2022-06-18-10; NID=511=sWQLpTMdHkYdCm7kPT6IpnzwNqjBzEOewHN_T0XL9gcIqZZ9Ll3zgUKVeAjjew2FClhSx_soP5NJPlN13908R4o02xVUbPEwsCtJ6EUpqGNqSq308iXtRzftQj-f7j24HksPz4E9Iq6aDIFd90b3_X06XDHXHztFg-8bqzfM4GY',
-    #     'User-Agent': ua.random
-    # }
     try:
         return session.get(url)
     except ConnectionError:
@@ -338,42 +324,7 @@ def add_data_to_dicts_in_list(db: list, name: str, data):
         el[name] = data
     return arr
     
-def write_to_json(database: list) -> bool:
-    with open('database.json', 'w+', encoding='utf-8') as f:
-        f.write(json.dumps(database))
-    return True
-
-def write_to_psql(database: list) -> bool:
-    for card in database:
-        try:
-            s = SiteModel(
-                organisation=card['name'],
-                thematic=card['thematic'],
-                email=card['email'],
-                phone=card['phone'],
-                website=card['website'],
-                state=card['state'],
-                city=card['city'],
-                address=card['address'],
-                query=card['query']
-            )
-            s.save()
-        except IntegrityError:
-            pass
-            
-        except DataError:
-            pass
-    return True
-
-def get_database_from_json():
-    with open('database.json', 'r', encoding='utf-8') as f:
-        return json.loads(f.read())
- 
-def get_cityes_and_states() -> dict:
-    with open('cityes.json', 'r', encoding='utf-8') as f:
-        return json.loads(f.read())
-
-def main(queryes: list[str] = ['car service'], mode: int = 0):
+def main():
     """ Main task function, create parser
     Args:
         queryes (list[str], optional): queryes list to google maps. Defaults to ['car service'].
@@ -382,55 +333,14 @@ def main(queryes: list[str] = ['car service'], mode: int = 0):
     Returns:
         int: count finded businesses
     """    
-    states_and_cityes = get_cityes_and_states()
-    
-        
-    database = []
-    
-    for query in queryes:
-        mine_data = []
-        if mode == 0:
-            query_data = parse_query(query)
-            query_data = add_data_to_dicts_in_list(query_data, 'city', '')
-            query_data = add_data_to_dicts_in_list(query_data, 'state', '')
-            query_data = add_data_to_dicts_in_list(query_data, 'query', query)
-            mine_data.append(query_data)
-            write_to_psql(unpack_lists(query_data))
-            time.sleep(random.randint(60, 90))
-        elif mode == 1:
-            for state in states_and_cityes:
-                for city in states_and_cityes[state]:
-                    if not is_city_exist_in_db(city, state):
-                        q = f"{query} near {city}"
-                        query_data = parse_query(q)
-                        query_data = add_data_to_dicts_in_list(query_data, 'city', city)
-                        query_data = add_data_to_dicts_in_list(query_data, 'state', state)
-                        query_data = add_data_to_dicts_in_list(query_data, 'query', q)
-                        mine_data.append(query_data)
-                        write_to_psql(unpack_lists(query_data))                          
-                        time.sleep(random.randint(60, 90))
-                    else:
-                        print(f'Drop {city}')
-        elif mode == 2:
-            for state in states_and_cityes:
-                q = f"{query} near {state}"
-                query_data = parse_query(q)
-                query_data = add_data_to_dicts_in_list(query_data, 'city', '')
-                query_data = add_data_to_dicts_in_list(query_data, 'state', state)
-                query_data = add_data_to_dicts_in_list(query_data, 'query', q)
-                mine_data.append(query_data)
-                write_to_psql(unpack_lists(query_data))
-                time.sleep(random.randint(60, 90))
-        else:
-            return 0
-        mine_data = clean_database(mine_data)
-        
-        database.append(unpack_lists(mine_data))
-    
-    database = clean_database(database)
-    i = write_to_excel(database=database) 
-    write_to_json(database=database)
-    write_to_psql(database=database)
-    
-    return i
+    while True:
+        query = get_any_query()
+        if query:
+            query_data = parse_query(query['query'])
+            query_data = add_data_to_dicts_in_list(query_data, 'city', query['city'])
+            query_data = add_data_to_dicts_in_list(query_data, 'state', query['state'])
+            query_data = add_data_to_dicts_in_list(query_data, 'query', query['query'])
+            query_data = clean_database(query_data)
+            write_to_site_db(database=query_data)
+        time.sleep(random.randint(60, 90))
 

@@ -60,13 +60,20 @@
         <b>none</b> - parse only queryes ID=0
         <br>
         <br>
+        <b>
+            The ADD QUERYES button does not start parsing, it only creates queryes. But button START PARSE already starts parsing (you do NOT need to press it).
+        </b>
+        <br>
+        <br>
         <br>
         <textarea id="queryes" rows="5" cols="50">car service car repaire service</textarea>
         Input queryes here
         <br>
         <input id="mode">Enter mode here.</input>      
         <br>
+        <label><input type="checkbox" id='chbox'>Ignore processed cityes</label>
         <br>
+        <button onclick='create_queryes()'>ADD QUERYES</button>      
         <button onclick='start_parse()'>START PARSE</button>      
         <br>
         <br>
@@ -85,28 +92,40 @@
                 xmlhttp.send(JSON.stringify(dict));
                 xmlhttp.onload = function() {
                     alert(`Sended [CODE: ${xmlhttp.status}]: ${xmlhttp.response}`);
-                    sended = true
+
                 };
                 xmlhttp.onerror = function() { // происходит, только когда запрос совсем не получилось выполнить
                     alert(`ERROR Connection`);
                 };
             }
 
-            function start_parse(){
+            function create_queryes(){
+                let chbox;
+                chbox=document.getElementById('chbox');
+                let chbox_status = true;
+                if (chbox.checked) {
+                    chbox_status = true;
+                } else {
+                    chbox_status = false;
+                }
                 let queryes = document.getElementById('queryes').value; 
                 let mode = document.getElementById('mode').value; 
                 let queryes_list = []
                 for (variable of queryes.split('\n')) {
                     queryes_list.push(variable.trim())
                 }
-                let dict = {'queryes': queryes_list, 'mode': mode}
+                let dict = {'queryes': queryes_list, 'mode': mode, 'ignore': chbox_status}
                 console.log(dict)
+                request(window.location.protocol+'//'+window.location.host+'/parser/create/', dict)
+                
+            }
+            function start_parse(){
                 if (!sended){
-                    request(window.location.protocol+'//'+window.location.host+'/parser/start-parse/', dict)
+                    request(window.location.protocol+'//'+window.location.host+'/parser/start/')
+                    sended = true
                 } else {
                     alert("Don't touch this button until you reload the page.")
                 }
-                
             }
         </script>
     </body>
