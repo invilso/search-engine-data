@@ -10,6 +10,7 @@ from .db import get_any_query, write_to_site_db, is_website_exist_in_db as i_w_e
 import bs4
 import httpx
 import requests_html
+import requests
 from asgiref.sync import sync_to_async
 from requests.exceptions import ConnectionError
 
@@ -21,7 +22,7 @@ def is_website_exist_in_db(website: str):
 async def a_req_get(session, url):
     try:
         return await session.get(url)
-    except ConnectionError:
+    except (ConnectionError, requests.ReadTimeout):
         print('Error Connection')
         asyncio.sleep(5)
         return await a_req_get(session, url)
@@ -29,7 +30,7 @@ async def a_req_get(session, url):
 def req_get(session, url):
     try:
         return session.get(url)
-    except ConnectionError:
+    except (ConnectionError, requests.ReadTimeout):
         print('Error Connection')
         time.sleep(5)
         return req_get(session, url)
