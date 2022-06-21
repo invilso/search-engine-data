@@ -19,7 +19,7 @@ def main(queryes: list[str] = ['car repair service'], mode: int = 0, ignore_proc
                     if ignore_processed_cityes:
                         is_exist = db.is_city_exist_in_db(city, state)
                     if not is_exist:
-                        q = f"{query} near {city}, {state}"
+                        q = f"{query} near {city}"
                         db.add_query(query=q, city=city, state=state)
                     else:
                         print(f'Drop {city}')
