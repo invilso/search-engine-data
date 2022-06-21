@@ -14,6 +14,7 @@ def main(queryes: list[str] = ['car repair service'], mode: int = 0, ignore_proc
         elif mode == 1:
             for state in states_and_cityes:
                 for city in states_and_cityes[state]:
+                    city = city.title()
                     is_exist = False
                     if ignore_processed_cityes:
                         is_exist = db.is_city_exist_in_db(city, state)
